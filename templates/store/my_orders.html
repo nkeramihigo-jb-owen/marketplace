@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% block title %}My orders{% endblock %}
+{% block content %}
+  <h2>My orders</h2>
+  {% for order in orders %}
+    <div class="order-box">
+      <h3>Order #{{ order.pk }} <small>{{ order.created_at|date:"d M Y, H:i" }}</small></h3>
+      <ul>
+        {% for item in order.items.all %}
+          <li>{{ item.quantity }} x {{ item.title }} ({{ item.subtotal }})
+              <span class="badge {% if item.status == 'pending' %}off{% else %}on{% endif %}">{{ item.get_status_display }}</span></li>
+        {% endfor %}
+      </ul>
+      <strong>Total: {{ order.total }}</strong>
+    </div>
+  {% empty %}
+    <p>You haven't ordered anything yet.</p>
+  {% endfor %}
+{% endblock %}

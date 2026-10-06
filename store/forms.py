@@ -1,5 +1,5 @@
 from django import forms
-from .models import Product
+from .models import Order, Product,
 
 class ProductForm(forms.ModelForm):
     class Meta:
@@ -11,3 +11,9 @@ class ProductForm(forms.ModelForm):
         if price <= 0:
             raise forms.ValidationError("Price must be greater than zero.")
         return price
+
+class CheckoutForm(forms.ModelForm):
+    class Meta:
+        model = Order
+        fields = ('full_name', 'phone', 'address', 'city')
+    

@@ -4,7 +4,13 @@ from functools import wraps
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from .forms import ProductForm
+from decimal import Decimal
+from django.db import transaction
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+from .cart import Cart
+from .forms import ProductForm, CheckoutForm
+from .models import Product, Category, Order, OrderItem
 
 def home(request):
     products = Product.objects.filter(is_active=True)[:8]
@@ -74,3 +80,97 @@ def product_delete(request, pk):
         messages.success(request, "Product deleted.")
         return redirect('seller_dashboard')
     return render(request, 'store/product_confirm_delete.html', {'product': product})
+
+def _qty(value, default=1):
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return default
+
+def cart_detail(request):
+    cart = Cart(request)
+    return render(request, 'store/cart.html', {'items': list(cart), 'total': cart.total()})
+
+@require_POST
+def cart_add(request, pk):
+    product = get_object_or_404(Product, pk=pk, is_active=True)
+    if request.user.is_authenticated and product.seller_id == request.user.id:
+        messages.error(request, "You can't buy your own product.")
+        return redirect('product_detail', pk=pk)
+    Cart(request).add(product.pk, max(_qty(request.POST.get('quantity')), 1))
+    messages.success(request, f'"{product.title}" added to your cart.')
+    return redirect('cart')
+
+@require_POST
+def cart_update(request, pk):
+    cart = Cart(request)
+    cart.set(pk, _qty(request.POST.get('quantity'), 1))
+
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        item = next((i for i in cart if i['product'].pk == pk), None)
+        return JsonResponse({
+            'removed': item is None,
+            'subtotal': str(item['subtotal']) if item else '0',
+            'total': str(cart.total()),
+            'count': len(cart),
+        })
+    return redirect('cart')
+
+@require_POST
+def cart_remove(request, pk):
+    Cart(request).remove(pk)
+    return redirect('cart')
+
+@login_required
+def checkout(request):
+    cart = Cart(request)
+    items = list(cart)
+    if not items:
+        messages.info(request, "Your cart is empty.")
+        return redirect('product_list')
+
+    form = CheckoutForm(request.POST or None, initial={
+        'full_name': request.user.get_full_name(),
+        'phone': request.user.profile.phone,
+    })
+    if request.method == 'POST' and form.is_valid():
+        with transaction.atomic():
+            order = form.save(commit=False)
+            order.buyer = request.user
+            order.save()
+            for item in items:
+                p = item['product']
+                OrderItem.objects.create(
+                    order=order, product=p, seller=p.seller,
+                    title=p.title, price=p.price, quantity=item['quantity'],
+                )
+        cart.clear()
+        return redirect('order_success', pk=order.pk)
+
+    return render(request, 'store/checkout.html', {'form': form, 'items': items, 'total': cart.total()})
+
+@login_required
+def order_success(request, pk):
+    order = get_object_or_404(Order, pk=pk, buyer=request.user)
+    return render(request, 'store/order_success.html', {'order': order})
+
+@login_required
+def my_orders(request):
+    orders = Order.objects.filter(buyer=request.user).prefetch_related('items')
+    return render(request, 'store/my_orders.html', {'orders': orders})
+
+@seller_required
+def seller_orders(request):
+    items = OrderItem.objects.filter(seller=request.user).select_related('order')
+    return render(request, 'store/seller_orders.html', {'items': items})
+
+@seller_required
+@require_POST
+def seller_item_status(request, pk):
+    item = get_object_or_404(OrderItem, pk=pk, seller=request.user)
+    status = request.POST.get('status')
+    if status in dict(OrderItem.STATUS):
+        item.status = status
+        item.save()
+        messages.success(request, "Status updated.")
+    return redirect('seller_orders')
