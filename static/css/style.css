@@ -64,4 +64,13 @@ h2 { margin: 1.5rem 0 1rem; }
 .preview { max-width: 100%; max-height: 220px; border-radius: 8px; margin: .5rem 0 1rem; display: block; }
 .form-box select { width: 100%; padding: .6rem; border: 1px solid #ccc; border-radius: 6px; }
 
+.qty-input { width: 70px; padding: .4rem; border: 1px solid #ccc; border-radius: 6px; }
+.cart-footer { display: flex; justify-content: flex-end; align-items: center; gap: 1.5rem; margin-top: 1rem; }
+.cart-total { font-size: 1.2rem; }
+.order-box { background: #fff; border: 1px solid #e3e5e8; border-radius: 10px; padding: 1rem 1.2rem; margin-bottom: 1rem; }
+.order-box ul { margin: .6rem 0 .6rem 1.2rem; }
+.plain-form p { margin-bottom: 1rem; }
+.plain-form label { display: block; font-weight: 600; margin-bottom: .3rem; }
+.plain-form input { width: 100%; padding: .6rem; border: 1px solid #ccc; border-radius: 6px; }
+
 @media (max-width: 700px) { .detail { grid-template-columns: 1fr; } }

@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% block title %}Orders received{% endblock %}
+{% block content %}
+  <div class="page-head">
+    <h2>Orders received</h2>
+    <a href="{% url 'seller_dashboard' %}">&larr; My products</a>
+  </div>
+  {% if items %}
+    <div class="table-wrap">
+      <table class="table">
+        <thead><tr><th>Order</th><th>Item</th><th>Qty</th><th>Subtotal</th><th>Deliver to</th><th>Status</th></tr></thead>
+        <tbody>
+          {% for item in items %}
+          <tr>
+            <td>#{{ item.order.pk }}</td>
+            <td>{{ item.title }}</td>
+            <td>{{ item.quantity }}</td>
+            <td>{{ item.subtotal }}</td>
+            <td>{{ item.order.full_name }}, {{ item.order.phone }}<br>{{ item.order.address }}, {{ item.order.city }}</td>
+            <td>
+              <form method="post" action="{% url 'seller_item_status' item.pk %}">
+                {% csrf_token %}
+                <select name="status" onchange="this.form.submit()">
+                  {% for value, label in item.STATUS %}
+                    <option value="{{ value }}" {% if item.status == value %}selected{% endif %}>{{ label }}</option>
+                  {% endfor %}
+                </select>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <p>No orders yet.</p>
+  {% endif %}
+{% endblock %}

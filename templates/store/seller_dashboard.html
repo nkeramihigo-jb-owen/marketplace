@@ -1,10 +1,13 @@
 {% extends 'base.html' %}
 {% block title %}My shop{% endblock %}
 {% block content %}
-  <div class="page-head">
-    <h2>{{ user.profile.shop_name }}: my products</h2>
+ <div class="page-head">
+  <h2>{{ user.profile.shop_name }}: my products</h2>
+  <div>
+    <a href="{% url 'seller_orders' %}">Orders received</a>
     <a href="{% url 'product_create' %}" class="btn">+ Add product</a>
   </div>
+</div>
 
   {% if products %}
     <div class="table-wrap">
