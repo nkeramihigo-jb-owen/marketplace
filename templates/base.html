@@ -1,0 +1,48 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Marketplace{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+  <header class="navbar">
+    <a href="{% url 'home' %}" class="logo">Marketplace</a>
+    <form action="{% url 'product_list' %}" method="get" class="search">
+      <input type="text" name="q" placeholder="Search products..." value="{{ q|default:'' }}">
+      <button type="submit">Search</button>
+    </form>
+    <nav>
+  {% if user.is_authenticated %}
+    <span>Hi, {{ user.username }}</span>
+    {% if user.profile.is_seller %}
+     <a href="{% url 'seller_dashboard' %}">My shop</a>
+    {% else %}
+      <a href="{% url 'become_seller' %}">Become a seller</a>
+    {% endif %}
+    <form action="{% url 'logout' %}" method="post" class="inline-form">
+      {% csrf_token %}
+      <button type="submit" class="link-btn">Log out</button>
+    </form>
+  {% else %}
+    <a href="{% url 'login' %}">Log in</a>
+    <a href="{% url 'signup' %}">Sign up</a>
+  {% endif %}
+</nav>
+  </header>
+
+  <main class="container">
+    {% if messages %}
+  {% for message in messages %}
+    <div class="alert {{ message.tags }}">{{ message }}</div>
+  {% endfor %}
+{% endif %}
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="footer">&copy; Marketplace</footer>
+  <script src="{% static 'js/main.js' %}"></script>
+</body>
+</html>

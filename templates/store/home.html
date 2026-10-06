@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% block content %}
+  <h2>Categories</h2>
+  <div class="chips">
+    {% for c in categories %}
+      <a href="{% url 'product_list' %}?category={{ c.slug }}">{{ c.name }}</a>
+    {% endfor %}
+  </div>
+
+  <h2>Latest products</h2>
+  <div class="grid">
+    {% for product in products %}
+      {% include 'store/_card.html' %}
+    {% empty %}
+      <p>No products yet.</p>
+    {% endfor %}
+  </div>
+{% endblock %}

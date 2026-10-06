@@ -1,0 +1,12 @@
+<a href="{% url 'product_detail' product.pk %}" class="card">
+  {% if product.image %}
+    <img src="{{ product.image.url }}" alt="{{ product.title }}">
+  {% else %}
+    <div class="no-image">No image</div>
+  {% endif %}
+  <div class="card-body">
+    <h3>{{ product.title }}</h3>
+    <p class="price">{{ product.price }}</p>
+    <small>by {{ product.seller.profile }}</small>
+  </div>
+</a>

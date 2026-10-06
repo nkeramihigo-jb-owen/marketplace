@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% block title %}Become a seller{% endblock %}
+{% block content %}
+  <div class="form-box">
+    <h2>Open your shop</h2>
+    <form method="post">
+      {% csrf_token %}
+      {{ form.as_p }}
+      <button type="submit" class="btn">Start selling</button>
+    </form>
+  </div>
+{% endblock %}
