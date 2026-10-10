@@ -62,3 +62,19 @@ class OrderItem(models.Model):
 
     def __str__(self):
         return f"{self.quantity} x {self.title}"        
+
+class Review(models.Model):
+    RATINGS = [(i, f"{i} star{'s' if i > 1 else ''}") for i in range(1, 6)]
+
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='reviews')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reviews')
+    rating = models.PositiveSmallIntegerField(choices=RATINGS, default=5)
+    comment = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        unique_together = ('product', 'user')   # one review per person per product
+
+    def __str__(self):
+        return f"{self.user} - {self.product} ({self.rating})"

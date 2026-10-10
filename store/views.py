@@ -1,4 +1,5 @@
-from django.db.models import Q
+from django.contrib.auth.models import User
+from django.db.models import Q, Avg, Count
 from .models import Product, Category
 from functools import wraps
 from django.shortcuts import render, get_object_or_404, redirect
@@ -9,8 +10,8 @@ from django.db import transaction
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from .cart import Cart
-from .forms import ProductForm, CheckoutForm
-from .models import Product, Category, Order, OrderItem
+from .forms import ProductForm, CheckoutForm, ReviewForm
+from .models import Product, Category, Order, OrderItem,Review
 
 def home(request):
     products = Product.objects.filter(is_active=True)[:8]
@@ -34,8 +35,19 @@ def product_list(request):
 
 def product_detail(request, pk):
     product = get_object_or_404(Product, pk=pk, is_active=True)
-    return render(request, 'store/product_detail.html', {'product': product})
+    reviews = product.reviews.select_related('user')
+    stats = reviews.aggregate(avg=Avg('rating'), count=Count('id'))
 
+    form = None
+    if request.user.is_authenticated and request.user != product.seller:
+        has_bought = OrderItem.objects.filter(product=product, order__buyer=request.user).exists()
+        if has_bought:
+            existing = reviews.filter(user=request.user).first()
+            form = ReviewForm(instance=existing)
+
+    return render(request, 'store/product_detail.html', {
+        'product': product, 'reviews': reviews, 'stats': stats, 'form': form,
+    })
 def seller_required(view):
     """Only logged-in users with a seller profile can pass."""
     @wraps(view)
@@ -174,3 +186,25 @@ def seller_item_status(request, pk):
         item.save()
         messages.success(request, "Status updated.")
     return redirect('seller_orders')
+
+@login_required
+@require_POST
+def review_submit(request, pk):
+    product = get_object_or_404(Product, pk=pk, is_active=True)
+    has_bought = OrderItem.objects.filter(product=product, order__buyer=request.user).exists()
+    if not has_bought:
+        messages.error(request, "Only customers who bought this product can review it.")
+        return redirect('product_detail', pk=pk)
+
+    form = ReviewForm(request.POST)
+    if form.is_valid():
+        Review.objects.update_or_create(
+            product=product, user=request.user, defaults=form.cleaned_data,
+        )
+        messages.success(request, "Thanks for your review!")
+    return redirect('product_detail', pk=pk)
+
+def shop_detail(request, username):
+    seller = get_object_or_404(User, username=username, profile__is_seller=True)
+    products = Product.objects.filter(seller=seller, is_active=True)
+    return render(request, 'store/shop_detail.html', {'seller': seller, 'products': products})

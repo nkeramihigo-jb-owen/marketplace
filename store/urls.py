@@ -18,4 +18,6 @@ path('orders/', views.my_orders, name='my_orders'),
 path('orders/<int:pk>/success/', views.order_success, name='order_success'),
 path('seller/orders/', views.seller_orders, name='seller_orders'),
 path('seller/orders/<int:pk>/status/', views.seller_item_status, name='seller_item_status'),
+path('products/<int:pk>/review/', views.review_submit, name='review_submit'),
+path('shop/<str:username>/', views.shop_detail, name='shop_detail'),
 ]

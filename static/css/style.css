@@ -74,3 +74,11 @@ h2 { margin: 1.5rem 0 1rem; }
 .plain-form input { width: 100%; padding: .6rem; border: 1px solid #ccc; border-radius: 6px; }
 
 @media (max-width: 700px) { .detail { grid-template-columns: 1fr; } }
+
+.rating { color: #d97706; font-weight: 600; }
+.reviews { margin-top: 2rem; }
+.reviews h2 { margin-top: 0; }
+.review-form { margin: 0 0 1.5rem; max-width: 520px; }
+.review-form select, .review-form textarea { width: 100%; padding: .6rem; border: 1px solid #ccc; border-radius: 6px; }
+.shop-header { background: #fff; border: 1px solid #e3e5e8; border-radius: 10px; padding: 1.5rem; margin-bottom: 1.5rem; }
+.shop-header h1 { margin-bottom: .4rem; }
