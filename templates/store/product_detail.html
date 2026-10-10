@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% block title %}{{ product.title }}{% endblock %}
+{% block content %}
+  <div class="detail">
+    {% if product.image %}<img src="{{ product.image.url }}" alt="{{ product.title }}">{% endif %}
+    <div>
+      <h1>{{ product.title }}</h1>
+      {% if stats.count %}
+        <p class="rating">★ {{ stats.avg|floatformat:1 }} <small>({{ stats.count }} review{{ stats.count|pluralize }})</small></p>
+      {% else %}
+        <p class="rating"><small>No reviews yet</small></p>
+      {% endif %}
+      <p class="price">{{ product.price }}</p>
+      <p>{{ product.description|linebreaks }}</p>
+      <p>Sold by <a href="{% url 'shop_detail' product.seller.username %}"><strong>{{ product.seller.profile }}</strong></a></p>
+
+      <form method="post" action="{% url 'cart_add' product.pk %}">
+        {% csrf_token %}
+        <input type="number" name="quantity" value="1" min="1" max="99" class="qty-input">
+        <button type="submit" class="btn">Add to cart</button>
+      </form>
+    </div>
+  </div>
+
+  <section class="reviews">
+    <h2>Reviews</h2>
+
+    {% if form %}
+      <div class="form-box review-form">
+        <h3>Rate this product</h3>
+        <form method="post" action="{% url 'review_submit' product.pk %}">
+          {% csrf_token %}
+          {{ form.as_p }}
+          <button type="submit" class="btn">Submit review</button>
+        </form>
+      </div>
+    {% elif user.is_authenticated and user != product.seller %}
+      <p><small>Buy this product to leave a review.</small></p>
+    {% endif %}
+
+    {% for r in reviews %}
+      <div class="order-box">
+        <strong>{{ r.user.username }}</strong>
+        <span class="rating">{{ r.rating }}/5 ★</span>
+        <small>{{ r.created_at|date:"d M Y" }}</small>
+        {% if r.comment %}<p>{{ r.comment }}</p>{% endif %}
+      </div>
+    {% empty %}
+      <p>No reviews yet.</p>
+    {% endfor %}
+  </section>
+{% endblock %}
